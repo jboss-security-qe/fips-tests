@@ -65,6 +65,8 @@ public class FipsTest {
     public static WebArchive deployment() {
         final WebArchive war = ShrinkWrap.create(WebArchive.class, "test.war");
         war.addAsWebResource(new StringAsset(HELLO_WORLD), "test.txt");
+        war.addClass(PKCS11LoginServlet.class);
+        war.addClass(MyCBHandler.class);
         return war;
     }
 
@@ -98,8 +100,15 @@ public class FipsTest {
         SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[] { "TLSv1" }, null,
                 SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
         CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-        try {
+        {
+            HttpGet httpget = new HttpGet("http://localhost:8080/test/login");
+            System.out.println("Executing request: " + httpget.getRequestLine());
+            CloseableHttpResponse response = httpclient.execute(httpget);
+            EntityUtils.consume(response.getEntity());
+            response.close();
+        }
 
+        try {
             HttpGet httpget = new HttpGet("https://localhost:8443/test/test.txt");
             System.out.println("Executing request: " + httpget.getRequestLine());
             CloseableHttpResponse response = httpclient.execute(httpget);
