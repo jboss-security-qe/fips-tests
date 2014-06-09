@@ -59,6 +59,7 @@ import org.junit.runner.RunWith;
 @RunAsClient
 public class FipsTest {
 
+    private static final String TLS_V1 = "TLSv1";
     private static final String HELLO_WORLD = "Hello world!";
 
     @Deployment(testable = false)
@@ -93,9 +94,9 @@ public class FipsTest {
             System.err.println("The fips.ca.path system property is not set.");
         }
         // Trust own CA and all self-signed certs
-        SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(trustStore).build();
+        SSLContext sslcontext = SSLContexts.custom().useProtocol(TLS_V1).loadTrustMaterial(trustStore).build();
         // Allow TLSv1 protocol only
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[] { "TLSv1" }, null,
+        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[] { TLS_V1 }, null,
                 SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
         CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
         try {
