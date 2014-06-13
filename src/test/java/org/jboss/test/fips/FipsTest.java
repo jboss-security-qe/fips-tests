@@ -26,9 +26,16 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
 import java.security.KeyStore;
+import java.security.Provider;
+import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
@@ -71,6 +78,8 @@ public class FipsTest {
 
     @Test
     public void test() throws Exception {
+        traceInfo();
+
         // create empty truststore
         final KeyStore trustStore = KeyStore.getInstance("JKS");
         trustStore.load(null, null);
@@ -115,4 +124,40 @@ public class FipsTest {
             httpclient.close();
         }
     }
+
+    public static void main(String args[]) {
+        traceInfo();
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void traceInfo() {
+        System.out.println("====== SYSTEM PROPERTIES =======================");
+        for (Map.Entry e : System.getProperties().entrySet()) {
+            System.out.println(e.getKey() + "=" + e.getValue());
+        }
+        System.out.println("====== SECURITY PROVIDERS ======================");
+        try {
+            Provider[] aProvider = Security.getProviders();
+            for (int i = 0; i < aProvider.length; i++) {
+                Provider provider = aProvider[i];
+                System.out.println("Provider " + (i + 1) + " : " + provider.getName() + " " + provider.getInfo() + " :");
+                List keyList = new ArrayList(provider.keySet());
+                try {
+                    Collections.sort(keyList);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Iterator keyIterator = keyList.iterator();
+                while (keyIterator.hasNext()) {
+                    String key = (String) keyIterator.next();
+                    System.out.println(key + ": " + provider.getProperty(key));
+                }
+                System.out.println("------------------------------------------------");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("================================================");
+    }
+
 }
