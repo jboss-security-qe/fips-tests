@@ -80,15 +80,11 @@ public class FipsTest {
         System.out.println("==============================================================================");
         System.out.println("SERVER environment:");
         {
-            HttpGet httpget = new HttpGet("http://localhost:8080/test" + TraceSecurityProviders.SERVLET_PATH);
-            System.out.println("Executing request: " + httpget.getRequestLine());
             final CloseableHttpClient defaultClient = HttpClients.createDefault();
-            defaultClient.execute(httpget);
-            defaultClient.close();
-            CloseableHttpResponse response = defaultClient.execute(httpget);
+            final HttpGet httpget = new HttpGet("http://localhost:8080/test" + TraceSecurityProviders.SERVLET_PATH);
+            final CloseableHttpResponse response = defaultClient.execute(httpget);
             try {
-                HttpEntity entity = response.getEntity();
-                System.out.println(EntityUtils.toString(entity));
+                System.out.println(EntityUtils.toString(response.getEntity()));
             } finally {
                 response.close();
             }
