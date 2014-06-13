@@ -39,6 +39,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <fips.ca.path>${fips.ca.path}</fips.ca.path>
+                        <javax.net.debug>all</javax.net.debug>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
