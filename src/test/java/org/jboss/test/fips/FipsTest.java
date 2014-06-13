@@ -25,17 +25,11 @@ package org.jboss.test.fips;
 import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
+import java.io.PrintWriter;
 import java.security.KeyStore;
-import java.security.Provider;
-import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
@@ -73,12 +67,32 @@ public class FipsTest {
     public static WebArchive deployment() {
         final WebArchive war = ShrinkWrap.create(WebArchive.class, "test.war");
         war.addAsWebResource(new StringAsset(HELLO_WORLD), "test.txt");
+        war.addClass(TraceSecurityProviders.class);
         return war;
     }
 
     @Test
     public void test() throws Exception {
-        traceInfo();
+        System.out.println("==============================================================================");
+        System.out.println("CLIENT environment:");
+        TraceSecurityProviders.traceInfo(new PrintWriter(System.out));
+
+        System.out.println("==============================================================================");
+        System.out.println("SERVER environment:");
+        {
+            HttpGet httpget = new HttpGet("https://localhost:8080/test" + TraceSecurityProviders.SERVLET_PATH);
+            System.out.println("Executing request: " + httpget.getRequestLine());
+            final CloseableHttpClient defaultClient = HttpClients.createDefault();
+            defaultClient.execute(httpget);
+            defaultClient.close();
+            CloseableHttpResponse response = defaultClient.execute(httpget);
+            try {
+                HttpEntity entity = response.getEntity();
+                System.out.println(EntityUtils.toString(entity));
+            } finally {
+                response.close();
+            }
+        }
 
         // create empty truststore
         final KeyStore trustStore = KeyStore.getInstance("JKS");
@@ -126,38 +140,6 @@ public class FipsTest {
     }
 
     public static void main(String args[]) {
-        traceInfo();
+        TraceSecurityProviders.traceInfo(new PrintWriter(System.out));
     }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static void traceInfo() {
-        System.out.println("====== SYSTEM PROPERTIES =======================");
-        for (Map.Entry e : System.getProperties().entrySet()) {
-            System.out.println(e.getKey() + "=" + e.getValue());
-        }
-        System.out.println("====== SECURITY PROVIDERS ======================");
-        try {
-            Provider[] aProvider = Security.getProviders();
-            for (int i = 0; i < aProvider.length; i++) {
-                Provider provider = aProvider[i];
-                System.out.println("Provider " + (i + 1) + " : " + provider.getName() + " " + provider.getInfo() + " :");
-                List keyList = new ArrayList(provider.keySet());
-                try {
-                    Collections.sort(keyList);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                Iterator keyIterator = keyList.iterator();
-                while (keyIterator.hasNext()) {
-                    String key = (String) keyIterator.next();
-                    System.out.println(key + ": " + provider.getProperty(key));
-                }
-                System.out.println("------------------------------------------------");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("================================================");
-    }
-
 }
