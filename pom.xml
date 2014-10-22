@@ -8,7 +8,6 @@
 	<version>0.1-SNAPSHOT</version>
 
 	<name>FIPS tests</name>
-	<!-- <url></url> -->
 	<properties>
 		<cacert.jks.truststore>cacert.truststore</cacert.jks.truststore>
 	</properties>
@@ -26,6 +25,23 @@
 	</dependencyManagement>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>keytool-maven-plugin</artifactId>
+					<version>1.5</version>
+					<configuration>
+						<keystore>${cacert.jks.truststore}</keystore>
+						<storepass>123456</storepass>
+						<alias>fips</alias>
+						<file>${fips.ca.path}</file>
+						<noprompt>true</noprompt>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -46,26 +62,6 @@
 						<!-- workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1105455 -->
 						<javax.net.ssl.trustStore>${cacert.jks.truststore}</javax.net.ssl.trustStore>
 					</systemPropertyVariables>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>keytool-maven-plugin</artifactId>
-				<version>1.5</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>importCertificate</goal>
-						</goals>
-						<phase>generate-resources</phase>
-					</execution>
-				</executions>
-				<configuration>
-					<keystore>${cacert.jks.truststore}</keystore>
-					<storepass>123456</storepass>
-					<alias>fips</alias>
-					<file>${fips.ca.path}</file>
-					<noprompt>true</noprompt>
 				</configuration>
 			</plugin>
 		</plugins>
